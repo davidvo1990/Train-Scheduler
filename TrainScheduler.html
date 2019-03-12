@@ -293,6 +293,24 @@
 
         var database = firebase.database();
 
+        ///////////////////////////
+        //all funtion run here
+        tabledisplay();
+        remove();
+        update();
+        updateTable()
+        autorun();
+        ////////////////////////////
+        //all variable is here
+        var trainName;
+        var trainDestination;
+        var trainStart;
+        var trainFrequency;
+
+        var nextArrival;
+        var tMinutesTillTrainArrive;
+        var trainId="";
+        ////////////////////////////
         //Button for adding new train information
         $(document).on("click", "#add-train-btn", function (event) {
             event.preventDefault();
@@ -328,18 +346,12 @@
             $("#destination-input").val("");
             $("#start-input").val("");
             $("#frequency-input").val("");
+            //update table 
+            tabledisplay();
 
             //END of input value
         });
-
-        var trainName;
-        var trainDestination;
-        var trainStart;
-        var trainFrequency;
-
-        var nextArrival;
-        var tMinutesTillTrainArrive;
-
+        
         //Create calculation formula for next Arrival and until train arrival time
         function calculate() {
 
@@ -409,7 +421,7 @@
 
                 var updateBtn = $("<button class='btn updateBtn ml-2 text-light'>Update</button>")
                 var removeBtn = $("<button class='btn removeBtn ml-2 text-light'>Remove</button>")
-                FireTrainName.append(updateBtn).append(removeBtn);
+                FireTrainName.prepend(removeBtn).prepend(updateBtn);
 
                 var newRow = $("<tr>").append(
                     FireTrainName,
@@ -434,6 +446,7 @@
             $(document).on('click', '.removeBtn', function () {
                 // desertRef = parseInt($(this).parent().attr("id"));
                 // var desertRef = $(this).closest('tr')
+                //get the key of object set in id
                 var trainId = $(this).parent().parent().attr("id");
                 console.log(trainId);
 
@@ -442,16 +455,18 @@
             })
             //END remove()
         };
-        remove();
 
 
+        
         function update() {
             $(document).on('click', '.updateBtn', function () {
                 // desertRef = parseInt($(this).parent().attr("id"));
                 // var desertRef = $(this).closest('tr')
-                var trainId = $(this).parent().parent().attr("id");
+                //get the key of object set in id, will use this key in updateTable() function
+                trainId = JSON.parse( JSON.stringify($(this).parent().parent().attr("id")));
                 console.log(trainId);
-
+                //create update form dynamicly, before the table
+                //create all the html
                 var update = $('<div class="jumbotron add"></div>')
                 var head = $('<div class="head">Update Train</div>')
                 var input = $('<div class="input"></div>')
@@ -474,7 +489,8 @@
                 var updateFrequency = $('<input class="form-control" id = "trainFrequency-update"  type = "text">')
 
                 var submitUpdate = $('<button class="btn text-light" id="update-train-btn">Submit</button>')
-
+                
+                //assign all html to where it belong
                 $(".update-form").html(update);
                 update.append(head).append(input);
                 input.append(form);
@@ -497,39 +513,56 @@
                 //var table = database.ref().child(trainId).update({ name: "New trainer" });
                 //console.log(table);
                 // tabledisplay();
-                $(document).on('click', '#update-train-btn', function (event) {
+               
+            })
+
+        };
+
+        function updateTable(){
+        $(document).on('click', '#update-train-btn', function (event) {
                     event.preventDefault();
+                    //get all value of input
+                    var upNam = $("#trainName-update").val();
+                    var upDes = $("#trainDestination-update").val();
+                    var upSta = $("#trainStart-update").val();
+                    var upFre = $("#trainFrequency-update").val();
 
-                    var upNam = $("#trainName-update").val().trim();
-                    var upDes = $("#trainDestination-update").val().trim();
-                    var upSta = $("#trainStart-update").val().trim();
-                    var upFre = $("#trainFrequency-update").val().trim();
-
-                    if (upNam !== "" || upDes !== "" || upSta !== "" || upFre !== ""){
-                    database.ref().child(trainId).update({ name: upNam });
-                    database.ref().child(trainId).update({ destination: upDes });
-                    database.ref().child(trainId).update({ start: upSta });
-                    database.ref().child(trainId).update({ frequency: upFre });
+                    //check condition, update only if something fill in, if empty on all input don't update
+                    if (upNam !== "" || upDes !== "" || upSta !== "" || upFre !== "") {
+                        //if only one input fill, then only update that input
+                        if (upNam !== "") {
+                            database.ref().child(trainId).update({ name: upNam });
+                            // database.ref().child(trainId+"/name").set(upNam);
+                        }
+                        if (upDes !== "") {
+                            database.ref().child(trainId).update({ destination: upDes });
+                        }
+                        if (upSta !== "") {
+                            database.ref().child(trainId).update({ start: upSta });
+                        }
+                        if (upFre !== "") {
+                            database.ref().child(trainId).update({ frequency: upFre });
+                        }
                     }
-                    
+
+
                     // Clears all of the text-boxes
-                    $("#trainname-update").val("");
-                    $("#destination-update").val("");
-                    $("#start-update").val("");
-                    $("#frequency-update").val("");
+                    // $("#trainname-update").val("");
+                    // $("#destination-update").val("");
+                    // $("#start-update").val("");
+                    // $("#frequency-update").val("");
 
                     tabledisplay();
                     $(".update-form").html("");
                     
-                });
+                    //trainId = "";
+                    console.log(trainId);
+                })
+                //END updateTable()
+            };
 
-            })
 
-        };
-        update();
-
-
-        // Dynamic created the Table
+        // Dynamic created the Table header
         function tabledisplay() {
             var table = $("<table class='train-display'></table>");
 
@@ -550,18 +583,24 @@
 
             table.append(header);
             $(".update").html(table);
+
+            //parse in the rest of the table
             trainUpdate();
 
             //END tabledisplay()
         }
 
-        tabledisplay();
+
+
 
         //Update the table information every 60 sec
-        setInterval(function () {
-            tabledisplay();
-        }, 60 * 1000);
-        //END setInterval()
+        function autorun() {
+            setInterval(function () {
+                tabledisplay();
+            }, 60 * 1000);
+            //END autorun()
+        };
+
 
 
     </script>
