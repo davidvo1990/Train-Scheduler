@@ -1,96 +1,184 @@
-/* general css */
 body {
-    /* background-image: url("assets/images/trivia.jpg"); */
-    /* background-image: url("../images/trivia.jpg"); */
-    /* color: white; */
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0;
-    font-family: Georgia, Times, "Times New Roman", serif;
-    font-size: 15px;
-    line-height: 35px;
-    font-weight: bold;
+  /* background-image: url("assets/images/trivia.jpg"); */
+  /* background-image: url("../images/trivia.jpg"); */
+  font-family: Georgia, Times, "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 35px;
+  /* font-weight: bold; */
 }
 
-.img-box {
-    float: left;
-    /* padding:5px; */
-    margin: 5px;
-    border: 2px solid red;
-    overflow: auto;
-}
-.row{
-    width:100%
-}
-.character {
-    margin: 5px;
-    font-weight: bold;
+h1 {
+  font-size: 30px;
+  line-height: 50px;
+  font-weight: bold;
 }
 
-.image-view {
-    overflow: auto;
-}
-/* for movie API */
-.movie {
-  color: purple
-}
-/* button stuff */
-.btn:hover{
-    background-color: purple;
-    animation: color_change 2s;
+h5 {
+  font-size: 18px;
+  line-height: 25px;
+  font-weight: bold;
 }
 
-
-.btn{
-    background-color:orange;
+.title {
+  text-align: center;
+  color: white;
+  /* background: blueviolet; */
 }
 
+.head {
+  /* background: chocolate; */
+  color: white;
+  font-weight: bold;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.schedule,
+.add {
+  padding: 0;
+  background: white;
+  border: 2px solid black;
+}
+
+td,
+th,
+tr {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#add-train-btn {
+  font-weight: bold;
+  /* background: chocolate; */
+  color: white;
+}
+
+.train-display,
+.train-input {
+  padding: 10px
+}
+
+.header {
+  font-weight: bold;
+}
 
 /* change color over time for button */
-  .btn {
-    animation: colorchange 50s; /* animation-name followed by duration in seconds*/
-       /* you could also use milliseconds (ms) or something like 2.5s */
-    -webkit-animation: colorchange 50s; /* Chrome and Safari */
+.btn,
+.title,
+.head {
+  animation: colorchange 20s;
+  /* animation-name followed by duration in seconds*/
+  /* you could also use milliseconds (ms) or something like 2.5s */
+  -webkit-animation: colorchange 20s infinite;
+  /* Chrome and Safari */
+}
+
+@keyframes colorchange {
+  0% {
+      background: red;
   }
 
-  @keyframes colorchange
-  {
-    0%   {background: red;}
-    25%  {background: yellow;}
-    50%  {background: blue;}
-    75%  {background: green;}
-    100% {background: red;}
+  25% {
+      background: yellow;
   }
 
-  @-webkit-keyframes colorchange /* Safari and Chrome - necessary duplicate */
-  {
-    0%   {background: red;}
-    25%  {background: yellow;}
-    50%  {background: blue;}
-    75%  {background: green;}
-    100% {background: red;}
+  50% {
+      background: blue;
   }
+
+  75% {
+      background: green;
+  }
+
+  100% {
+      background: red;
+  }
+}
+
+@-webkit-keyframes colorchange
+
+/* Safari and Chrome - necessary duplicate */
+  {
+  0% {
+      background: red;
+  }
+
+  25% {
+      background: yellow;
+  }
+
+  50% {
+      background: blue;
+  }
+
+  75% {
+      background: green;
+  }
+
+  100% {
+      background: red;
+  }
+}
+
 /* change color over time for body background */
-  body {
-    animation: bodycolor 50s; /* animation-name followed by duration in seconds*/
-       /* you could also use milliseconds (ms) or something like 2.5s */
-    -webkit-animation: bodycolor 50s; /* Chrome and Safari */
+body {
+  animation: bodycolor 20s;
+  /* animation-name followed by duration in seconds*/
+  /* you could also use milliseconds (ms) or something like 2.5s */
+  -webkit-animation: bodycolor 20s infinite;
+  /* Chrome and Safari */
+}
+
+@keyframes bodycolor {
+  0% {
+      background: lightslategray;
   }
 
-  @keyframes bodycolor
-  {
-    0%   {background: lightslategray;}
-    25%  {background: lightcyan;}
-    50%  {background: lightsalmon;}
-    75%  {background: lightseagreen;}
-    100% {background: lightslategray;}
+  25% {
+      background: lightcyan;
   }
 
-  @-webkit-keyframes bodycolor /* Safari and Chrome - necessary duplicate */
-  {
-    0%   {background: lightslategray;}
-    25%  {background: lightcyan;}
-    50%  {background: lightsalmon;}
-    75%  {background: lightseagreen;}
-    100% {background: lightslategray;}
+  50% {
+      background: lightsalmon;
   }
+
+  75% {
+      background: lightseagreen;
+  }
+
+  100% {
+      background: lightslategray;
+  }
+}
+
+@-webkit-keyframes bodycolor
+
+/* Safari and Chrome - necessary duplicate */
+  {
+  0% {
+      background: lightslategray;
+  }
+
+  25% {
+      background: lightcyan;
+  }
+
+  50% {
+      background: lightsalmon;
+  }
+
+  75% {
+      background: lightseagreen;
+  }
+
+  100% {
+      background: lightslategray;
+  }
+}

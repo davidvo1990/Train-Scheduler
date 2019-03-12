@@ -1,228 +1,326 @@
-var apiKey = "Khll4GtC4J8q6tXZl96C97GzmgOPgSiv"
+// Initialize Firebase
+var config = {
+    apiKey: "AIzaSyDT8asGcI4g15O0-qNBXu0Vfy2296G1Mzk",
+    authDomain: "trainscheduler-eb955.firebaseapp.com",
+    databaseURL: "https://trainscheduler-eb955.firebaseio.com",
+    projectId: "trainscheduler-eb955",
+    storageBucket: "trainscheduler-eb955.appspot.com",
+    messagingSenderId: "954629056200"
+};
+firebase.initializeApp(config);
 
-var queryURL;
-var topics = ["Ironman", "Captain America", "Spiderman", "Thanos", "Black Widow",
-    "Deadpool", "Hulk", "Black Panther", "Thor", "Jean Grey", "Loki", "Groot",
-    "Cable", "Juggernaut", "Star-Lord", "Ant-Man", "Wolverine", "Nick Fury",
-    "Rocket Raccoon", "Nebula"
-];
-var currentChar;
-var limit;
+var database = firebase.database();
+
 ///////////////////////////
-//Global function call
-renderButtons();
-animateImage();
-downloadImage();
-////////////////////////
+//all funtion run here
+tabledisplay();
+remove();
+update();
+updateTable()
+autorun();
+////////////////////////////
+//all variable is here
+var trainName;
+var trainDestination;
+var trainStart;
+var trainFrequency;
 
-function renderButtons() {
+var nextArrival;
+var tMinutesTillTrainArrive;
+var trainId = "";
+////////////////////////////
+//Button for adding new train information
+$(document).on("click", "#add-train-btn", function (event) {
+    event.preventDefault();
 
-    // Deleting the character buttons prior to adding new buttons
-    // (this is necessary otherwise we will have repeat buttons)
-    $(".button-view").empty();
+    // Get user input
+    var trainNameIn = $("#trainname-input").val().trim();
+    var trainDestinationIn = $("#destination-input").val().trim();
+    var trainStartIn = $("#start-input").val().trim();
+    var trainFrequencyIn = $("#frequency-input").val().trim();
 
-    // Looping through the array of chars
-    for (var i = 0; i < topics.length; i++) {
+    // Creates local "temporary" object for holding train data
+    var newTrain = {
+        name: trainNameIn,
+        destination: trainDestinationIn,
+        start: trainStartIn,
+        frequency: trainFrequencyIn
+    };
 
-        // Then dynamicaly generating buttons for each char in the array.
-        // This code $("<button>") is all jQuery needs to create the start and end tag. (<button></button>)
-        var button = $("<button>");
-        // buttondding button class
-        button.addClass("character btn  text-light");
-        // Adding a data-attribute with a value of the char at index i
-        button.attr("data-name", topics[i]);
-        // Providing the button's text with a value of the char at index i
-        button.text(topics[i]);
-        // Adding the button to the HTML
-        $(".button-view").append(button);
-    }
-}
+    // Uploads train data to the database
+    database.ref().push(newTrain);
+    // database.ref().set(newTrain);
 
-// This function handles events where one button is clicked
-$(".add-char").on("click", function (event) {
-    // event.preventDefault() prevents the form from trying to submit itself.
-    // We're using a form so that the user can hit enter instead of clicking the button if they want
-    // event.preventDefault();
+    // Logs everything to console
+    console.log("New Train Name is: " + newTrain.name);
+    console.log("New Train Destination is: " + newTrain.destination);
+    console.log("New Train Start Time at: " + newTrain.start);
+    console.log("New Train Frequency is: " + newTrain.frequency);
 
-    // This line will grab the text from the input box
-    var currentButton = $(".input").val().trim();
+    alert("New train information successfully added");
 
-    // Clear the textbox when done
-    $(".input").val("");
+    // Clears all of the text-boxes
+    $("#trainname-input").val("");
+    $("#destination-input").val("");
+    $("#start-input").val("");
+    $("#frequency-input").val("");
+    //update table 
+    tabledisplay();
 
-    // The character from the textbox is then added to our array
-    topics.push(currentButton);
-
-    // calling renderButtons which handles the processing of our char array
-    renderButtons();
+    //END of input value
 });
 
-//function to add image when click character button
-$(document).on("click", ".character", function (event) {
-    $(".image-view").empty();
-    //API for giphy
-    var moreImage = $("<button class='btn text-light more-image'>Add more!</button>")
-    $(".extra").html(moreImage);
+//Create calculation formula for next Arrival and until train arrival time
+function calculate() {
 
-    currentChar = $(this).attr("data-name");
-    console.log("You click: " + currentChar);
-    limit = 10;
+    // Calculate
+    console.log("------------");
+    var format = "HH:mm";
+    //Train start time
+    var trainStartValue = moment().format(trainStart, format);
+    console.log("START TIME: " + trainStartValue);
 
-    queryURL = "https://api.giphy.com/v1/gifs/search?limit=" + limit + "&q=marvel+" + currentChar + "&api_key=" + apiKey;
+    // Current Time
+    var now = moment().format("HH:mm");
+    console.log("CURRENT TIME: " + now);
 
+    // Difference between the times
+    var diffTime = moment().diff(moment(trainStartValue, "X"), "minutes");
+    console.log("DIFFERENCE IN TIME: " + diffTime);
 
-    $.ajax({
-        url: queryURL,
-        method: "GET"
-    }).then(updatePage);
+    // var displayedDate = -(convertedDate.diff(moment(), "months"));
 
-    //second API for movie 
-    var movieKey = "5195b749"
-    var movieURL = "https://www.omdbapi.com/?t=" + currentChar + "&y=&plot=short&apikey=" + movieKey;
+    // Time apart (remainder)
+    var tRemainder = diffTime % trainFrequency;
+    console.log("Time apart: " + tRemainder);
 
-    $.ajax({
-        url: movieURL,
-        method: "GET"
-    }).then(function (response) {
+    // Minute Until Train
+    tMinutesTillTrainArrive = trainFrequency - tRemainder;
+    console.log("MINUTES TILL TRAIN ARRIVE: " + tMinutesTillTrainArrive);
 
-        console.log(response);
-        var title = response.Title;
-        var rating = response.Ratings[0].Value;
-        var actor = response.Actors;
-        var rated = response.Rated;
-        var poster = response.Poster;
-        var titleDiv = $("<div>Title: <span>" + title + "</span></div>");
-        var ratingDiv = $("<div>Rating: <span>" + rating + "</span></div>");
-        var actorDiv = $("<div>Actor: <span>" + actor + "</span></div>");
-        var ratedDiv = $("<div>Rated: <span>" + rated + "</span></div>");
-        var imgDiv = $("<div><img src='" + poster + "'></div>");
-        console.log(title);
-        console.log(rating);
-        console.log(actor);
-        console.log(rated);
-        console.log(poster);
+    // Next Train
+    var nextTrain = moment().add(tMinutesTillTrainArrive, "minutes");
+    nextArrival = moment(nextTrain).format("hh:mm A");
 
-        $(".movie-box").html(titleDiv).append(ratedDiv).append(ratingDiv).append(actorDiv).append(imgDiv);
-    });
-
-
-
-    //END on click
-});
-
-//function to add 10 more images, 20 total
-$(document).on("click", ".more-image", function (event) {
-    $(".image-view").empty();
-
-    limit = 20;
-    queryURL = "https://api.giphy.com/v1/gifs/search?limit=" + limit + "&q=marvel+" + currentChar + "&api_key=" + apiKey;
-    $.ajax({
-        url: queryURL,
-        method: "GET"
-    }).then(updatePage);
-    //END on click
-})
-
-//function allow download on click download button
-function downloadImage() {
-    $(document).on("click", ".download", function () {
-        // forceDownload(url, fileName);
-        var url = $(this).parent().find(".imageDiv").find(".gif").attr("data-animate");
-        var fileName = $(this).parent().find(".title").attr("imgtitle");
-        console.log("Link to download: " + url);
-        console.log("File name to download: " + fileName);
-        forceDownload(url, fileName);
-    })
-}
-//function for giphy ajax
-function updatePage(response) {
-    console.log(response);
-    var datas = response.data;
-
-    for (var i = 0; i < datas.length; i++) {
-        var img = $("<img>");
-        img.attr("src", datas[i].images.fixed_height_small_still.url);
-        img.addClass("gif");
-        img.attr("data-still", datas[i].images.fixed_height_small_still.url)
-        img.attr("data-animate", datas[i].images.fixed_height_small.url)
-        img.attr("data-state", "still");
-        var imageDiv = $("<div class='imageDiv'></div>")
-        imageDiv.html(img);
-
-        var rating = $("<div class='rating'>Rating: <span>" + datas[i].rating + "</span></div>");
-        var title = $("<div class='title' imgtitle='" + datas[i].title + "'>Topic: <span >" + datas[i].title + "</span></div>");
-        // var source = $("<div>Source: <span>"+datas[i].source+"</span></div>");
-        var import_datetime = $("<div>Import date: <span>" + datas[i].import_datetime + "</span></div>");
-        //var download = $("<a href=" + datas[i].images.fixed_height_small.url + " download><button class='bnt'>Download!</button></a>")
-
-        var download = $("<button class='btn download text-light mr-1'>Download</button>")
-        var favorite = $("<button class='btn favorite text-light'>Favorite</button>")
-        url = datas[i].images.fixed_height_small.url;
-        fileName = datas[i].title;
-
-
-
-
-        var imgDiv = $("<div>").append(title).append(import_datetime).append(rating).append(download).append(favorite).append(imageDiv);
-        imgDiv.addClass("img-box");
-
-
-        $(".image-view").append(imgDiv);
-    }
-    //END updatePage()
+    console.log("ARRIVAL TIME: " + nextArrival);
+    console.log("------------");
+    //END calculate()
 };
 
-//add favorite and more favorite item to the favorite box
-$(document).on("click", ".favorite", function () {
-    $(".favorite-box").html($(this).parent());
-    console.log($(this).parent())
-
-})
-
-// $(document).on("click", ".download", function (event) {
-//     forceDownload(url, fileName)
-// })
-
-//could not cross-origin have to force download cross origin new update
-function forceDownload(url, fileName) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.responseType = "blob";
-    xhr.onload = function () {
-        var urlCreator = window.URL || window.webkitURL;
-        var imageUrl = urlCreator.createObjectURL(this.response);
-        var tag = document.createElement('a');
-        tag.href = imageUrl;
-        tag.download = fileName;
-        document.body.appendChild(tag);
-        tag.click();
-        document.body.removeChild(tag);
-    }
-    xhr.send();
-}
 
 
-//this is for the still and animate image when click
-function animateImage() {
-    $(document).on("click", ".gif", function () {
-        var state = $(this).attr("data-state");
-        // If the clicked image's state is still, update its src attribute to what its data-animate value is.
-        // Then, set the image's data-state to animate
-        // Else set src to the data-still value
-        if (state === "still") {
-            $(this).attr("src", $(this).attr("data-animate"));
-            $(this).attr("data-state", "animate");
-        } else {
-            $(this).attr("src", $(this).attr("data-still"));
-            $(this).attr("data-state", "still");
+// Create Firebase event for adding new train to the database and a row in the html when a user adds an entry
+function trainUpdate() {
+    database.ref().on("child_added", function (childSnapshot) {
+        // database.ref().on("value", function (childSnapshot) {
+
+        console.log(childSnapshot.val());
+
+        // Store everything into a variable.
+        trainName = childSnapshot.val().name;
+        trainDestination = childSnapshot.val().destination;
+        trainStart = childSnapshot.val().start;
+        trainFrequency = childSnapshot.val().frequency;
+
+        // Employee Info
+        console.log("Firebase pull, Employee Name Info: " + trainName);
+        console.log("Firebase pull, Employee Destination Info: " + trainDestination);
+        console.log("Firebase pull, Employee Start Time Info: " + trainStart);
+        console.log("Firebase pull, Employee Frequency Info: " + trainFrequency);
+
+        calculate();
+
+        // Create the new row of train data
+        var FireTrainName = $("<td></td>").text(trainName);
+        var FireTrainDestination = $("<td>").text(trainDestination);
+        var FireTrainFrequency = $("<td>").text(trainFrequency);
+        var FireNextArrivall = $("<td>").text(nextArrival);
+        var FireTMinutesTillTrainArrive = $("<td>").text(tMinutesTillTrainArrive);
+
+        var FireButton = $("<td></td>");
+        var updateBtn = $("<button class='btn updateBtn ml-2 text-light'>Update</button>")
+        var removeBtn = $("<button class='btn removeBtn ml-2 text-light'>Remove</button>")
+        FireButton.prepend(removeBtn).prepend(updateBtn);
+
+        var newRow = $("<tr>").append(
+            FireButton,
+            FireTrainName,
+            FireTrainDestination,
+            FireTrainFrequency,
+            FireNextArrivall,
+            FireTMinutesTillTrainArrive
+        );
+
+        var keys = childSnapshot.key;
+        newRow.attr('id', keys);
+
+        // Append the new row to the table
+        $(".train-display").append(newRow);
+    })
+
+    //END trainUpdate()
+};
+
+// add remove button
+function remove() {
+    $(document).on('click', '.removeBtn', function () {
+        // desertRef = parseInt($(this).parent().attr("id"));
+        // var desertRef = $(this).closest('tr')
+        //get the key of object set in id
+        var trainId = $(this).parent().parent().attr("id");
+        console.log(trainId);
+
+        database.ref().child(trainId).remove();
+        tabledisplay();
+    })
+    //END remove()
+};
+
+
+
+function update() {
+    $(document).on('click', '.updateBtn', function () {
+        // desertRef = parseInt($(this).parent().attr("id"));
+        // var desertRef = $(this).closest('tr')
+        //get the key of object set in id, will use this key in updateTable() function
+        trainId = JSON.parse(JSON.stringify($(this).parent().parent().attr("id")));
+        console.log(trainId);
+        //create update form dynamicly, before the table
+        //create all the html
+        var update = $('<div class="jumbotron add"></div>')
+        var head = $('<div class="head">Update Train</div>')
+        var input = $('<div class="input"></div>')
+        var form = $('<form class="train-input"></form>')
+
+        var formgroupName = $('<div class="form-group"><div>')
+        var lableName = $('<label class="header" for="trainName-update">Train Name</label>')
+        var updateName = $('<input class="form-control" id = "trainName-update"  type = "text">')
+
+        var formgroupDestination = $('<div class="form-group"><div>')
+        var lableDestination = $('<label class="header" for="trainDestination-update">Destination</label>')
+        var updateDestination = $('<input class="form-control" id = "trainDestination-update"  type = "text">')
+
+        var formgroupStart = $('<div class="form-group"><div>')
+        var lableStart = $('<label class="header" for="trainStart-update">First Train Time(HH:mm - military time)</label>')
+        var updateStart = $('<input class="form-control" id = "trainStart-update"  type = "text">')
+
+        var formgroupFrequency = $('<div class="form-group"><div>')
+        var lableFrequency = $('<label class="header" for="trainFrequency-update">Frequency</label>')
+        var updateFrequency = $('<input class="form-control" id = "trainFrequency-update"  type = "text">')
+
+        var submitUpdate = $('<button class="btn text-light" id="update-train-btn">Submit</button>')
+
+        //assign all html to where it belong
+        $(".update-form").html(update);
+        update.append(head).append(input);
+        input.append(form);
+
+        form.append(formgroupName);
+        formgroupName.append(lableName).append(updateName);
+
+        form.append(formgroupDestination);
+        formgroupDestination.append(lableDestination).append(updateDestination);
+
+        form.append(formgroupStart);
+        formgroupStart.append(lableStart).append(updateStart);
+
+        form.append(formgroupFrequency);
+        formgroupFrequency.append(lableFrequency).append(updateFrequency);
+
+        form.append(submitUpdate);
+
+
+        //var table = database.ref().child(trainId).update({ name: "New trainer" });
+        //console.log(table);
+        // tabledisplay();
+
+    })
+
+};
+
+function updateTable() {
+    $(document).on('click', '#update-train-btn', function (event) {
+        event.preventDefault();
+        //get all value of input
+        var upNam = $("#trainName-update").val();
+        var upDes = $("#trainDestination-update").val();
+        var upSta = $("#trainStart-update").val();
+        var upFre = $("#trainFrequency-update").val();
+
+        //check condition, update only if something fill in, if empty on all input don't update
+        if (upNam !== "" || upDes !== "" || upSta !== "" || upFre !== "") {
+            //if only one input fill, then only update that input
+            if (upNam !== "") {
+                database.ref().child(trainId).update({ name: upNam });
+                // database.ref().child(trainId+"/name").set(upNam);
+            }
+            if (upDes !== "") {
+                database.ref().child(trainId).update({ destination: upDes });
+            }
+            if (upSta !== "") {
+                database.ref().child(trainId).update({ start: upSta });
+            }
+            if (upFre !== "") {
+                database.ref().child(trainId).update({ frequency: upFre });
+            }
         }
 
+
+        // Clears all of the text-boxes
+        // $("#trainname-update").val("");
+        // $("#destination-update").val("");
+        // $("#start-update").val("");
+        // $("#frequency-update").val("");
+
+        tabledisplay();
+        $(".update-form").html("");
+
+        //trainId = "";
+        console.log(trainId);
     })
-    //END animateImage()
+    //END updateTable()
 };
 
-// sound for fun
-var audio = new Audio("assets/sound/bensound-cute.mp3");
-setInterval(function () {
-    audio.play();
-}, 1000);
+
+// Dynamic created the Table header
+function tabledisplay() {
+    var table = $("<table class='train-display'></table>");
+
+    var header = $("<tr class='header'></tr>");
+    var hButton = $("<th scope='col'> </th>");
+    var hName = $("<th scope='col'>Train Name</th>");
+    var hDes = $("<th scope='col'>Destination</th>");
+    var hFre = $("<th scope='col'>Frequency (min)</th>");
+    var hNext = $("<th scope='col'>Next Arrival</th>");
+    var hAway = $("<th scope='col'>Minutes Away</th>");
+
+    header.append(
+        hButton,
+        hName,
+        hDes,
+        hFre,
+        hNext,
+        hAway
+    );
+
+    table.append(header);
+    $(".update").html(table);
+
+    //parse in the rest of the table
+    trainUpdate();
+
+    //END tabledisplay()
+}
+
+
+
+
+//Update the table information every 60 sec
+function autorun() {
+    setInterval(function () {
+        tabledisplay();
+    }, 60 * 1000);
+    //END autorun()
+};
+
+
